@@ -1,9 +1,14 @@
 
 # DSR Texture Packer & Unpacker
 
+**Planned**:
+* Command-line interface (CLI)
+* Native Linux GUI
+* Merge with UXM (?)
+
 [NexusMods Page](https://www.nexusmods.com/darksoulsremastered/mods/9)  
 A tool to extract and replace textures in Dark Souls: Remastered. Running as Administrator is recommended.  
-Requires [.NET 4.7.2](https://www.microsoft.com/net/download/thank-you/net472) - Windows 10 users should already have this.  
+Requires [.NET 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (Windows 10 or newer) or [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) (Windows 7, 8, 8.1)  
 and [Visual C++ 2015](https://www.microsoft.com/en-us/download/details.aspx?id=48145) - Make sure to get the x64 installer.
 
 TPUP serves two purposes:
@@ -46,8 +51,6 @@ If you're trying to install a mod but no files end up being repacked, pay close 
 
 # Credits
 
-[Costura.Fody](https://github.com/Fody/Costura) by Simon Cropp, Cameron MacFarland
-
 [DirectXTex](https://github.com/Microsoft/DirectXTex) by Microsoft Corp
 
 [Octokit](https://github.com/octokit/octokit.net) by GitHub
@@ -57,6 +60,9 @@ If you're trying to install a mod but no files end up being repacked, pay close 
 [TeximpNet](https://bitbucket.org/Starnick/teximpnet) by Nicholas Woodfield
 
 # Changelog
+
+### 2.0
+* Switched from .NET Framework to newer .NET Core
 
 ### 1.5
 * Reduced peak memory usage by up to 50% (especially under heavy load)
