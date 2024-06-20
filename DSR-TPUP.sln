@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSR-TPUP", "DSR-TPUP\DSR-TPUP.csproj", "{488B4409-FEEC-4C27-8CDA-F258F96586B3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSFormats", "..\DSFormats\DSFormats\DSFormats.csproj", "{38B89629-A437-400D-ABC6-97E76B227C41}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoulsFormats", "..\SoulsFormats\SoulsFormats\SoulsFormats.csproj", "{38B89629-A437-400D-ABC6-97E76B227C41}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

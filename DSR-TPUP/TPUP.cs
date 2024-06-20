@@ -1,4 +1,4 @@
-﻿using DSFormats;
+﻿using SoulsFormats;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -246,10 +246,11 @@ namespace DSR_TPUP
         private bool prepareTPF(string absolute, string relative, string subpath, bool dcx)
         {
             bool edited = false;
+            DCX.Type type = DCX.Type.None;
             TPF tpf;
             if (dcx)
             {
-                byte[] decompressed = DCX.Decompress(absolute);
+                byte[] decompressed = DCX.Decompress(absolute, out type);
                 tpf = TPF.Read(decompressed);
             }
             else
@@ -265,7 +266,7 @@ namespace DSR_TPUP
                 if (dcx)
                 {
                     byte[] tpfBytes = tpf.Write();
-                    DCX.Compress(tpfBytes, absolute);
+                    DCX.Compress(tpfBytes, type, absolute);
                 }
                 else
                 {
@@ -283,18 +284,21 @@ namespace DSR_TPUP
             string bdtPath = dir + "\\" + name + ".tpfbdt";
             if (File.Exists(bdtPath))
             {
-                BDT bdt;
+                byte[] bhdBytes;
+                DCX.Type type = DCX.Type.None;
+                BXF3 bxf;
                 if (dcx)
                 {
-                    byte[] decompressed = DCX.Decompress(absolute);
-                    bdt = BDT.Read(decompressed, bdtPath);
+                    bhdBytes = DCX.Decompress(absolute, out type);
+                    bxf = BXF3.Read(bhdBytes, bdtPath);
                 }
                 else
                 {
-                    bdt = BDT.Read(absolute, bdtPath);
+                    bhdBytes = null;
+                    bxf = BXF3.Read(absolute, bdtPath);
                 }
 
-                if (processBDT(bdt, looseDir, subpath, repack))
+                if (processBDT(bxf, looseDir, subpath, repack))
                 {
                     edited = true;
                     backup(absolute);
@@ -302,12 +306,12 @@ namespace DSR_TPUP
 
                     if (dcx)
                     {
-                        byte[] bhdBytes = bdt.Write(bdtPath);
-                        DCX.Compress(bhdBytes, absolute);
+                        bxf.Write(out bhdBytes, bdtPath);
+                        DCX.Compress(bhdBytes, type, absolute);
                     }
                     else
                     {
-                        bdt.Write(absolute, bdtPath);
+                        bxf.Write(absolute, bdtPath);
                     }
                 }
             }
@@ -321,18 +325,19 @@ namespace DSR_TPUP
         private bool prepareBND(string absolute, string relative, string subpath, bool dcx)
         {
             bool edited = false;
-            BND bnd;
+            DCX.Type type = DCX.Type.None;
+            BND3 bnd;
             if (dcx)
             {
-                byte[] decompressed = DCX.Decompress(absolute);
-                bnd = BND.Read(decompressed);
+                byte[] decompressed = DCX.Decompress(absolute, out type);
+                bnd = BND3.Read(decompressed);
             }
             else
             {
-                bnd = BND.Read(absolute);
+                bnd = BND3.Read(absolute);
             }
 
-            foreach (BND.File bndEntry in bnd.Files)
+            foreach (BinderFile bndEntry in bnd.Files)
             {
                 if (stop)
                     break;
@@ -356,12 +361,13 @@ namespace DSR_TPUP
                     string bndBDTPath = bndDir + "\\" + bndName + ".chrtpfbdt";
                     if (File.Exists(bndBDTPath))
                     {
-                        BDT bndBDT = BDT.Read(bndEntry.Bytes, bndBDTPath);
+                        BXF3 bndBDT = BXF3.Read(bndEntry.Bytes, bndBDTPath);
+                        byte[] bndBHDBytes = bndEntry.Bytes;
                         if (processBDT(bndBDT, looseDir, subpath, repack))
                         {
                             edited = true;
                             backup(bndBDTPath);
-                            bndEntry.Bytes = bndBDT.Write(bndBDTPath);
+                            bndBDT.Write(out bndBHDBytes, bndBDTPath);
                         }
                     }
                     else
@@ -378,7 +384,7 @@ namespace DSR_TPUP
                 if (dcx)
                 {
                     byte[] bndBytes = bnd.Write();
-                    DCX.Compress(bndBytes, absolute);
+                    DCX.Compress(bndBytes, type, absolute);
                 }
                 else
                 {
@@ -388,21 +394,22 @@ namespace DSR_TPUP
             return edited;
         }
 
-        private bool processBDT(BDT bdt, string baseDir, string subPath, bool repack)
+        private bool processBDT(BXF3 bxf, string baseDir, string subPath, bool repack)
         {
             bool edited = false;
-            foreach (BDT.File file in bdt.Files)
+            foreach (BinderFile file in bxf.Files)
             {
                 if (stop)
                     return false;
 
                 bool dcx = false;
+                DCX.Type type = DCX.Type.None;
                 byte[] bdtEntryBytes = file.Bytes;
                 string bdtEntryExtension = Path.GetExtension(file.Name);
                 if (bdtEntryExtension == ".dcx")
                 {
                     dcx = true;
-                    bdtEntryBytes = DCX.Decompress(bdtEntryBytes);
+                    bdtEntryBytes = DCX.Decompress(bdtEntryBytes, out type);
                     bdtEntryExtension = Path.GetExtension(file.Name.Substring(0, file.Name.Length - 4));
                 }
 
@@ -413,7 +420,7 @@ namespace DSR_TPUP
                     {
                         file.Bytes = tpf.Write();
                         if (dcx)
-                            file.Bytes = DCX.Compress(file.Bytes);
+                            file.Bytes = DCX.Compress(file.Bytes, type);
                         edited = true;
                     }
                 }

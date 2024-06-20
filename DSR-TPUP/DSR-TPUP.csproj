@@ -103,9 +103,9 @@
     <Content Include="icon.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DSFormats\DSFormats\DSFormats.csproj">
+    <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj">
       <Project>{38B89629-A437-400D-ABC6-97E76B227C41}</Project>
-      <Name>DSFormats</Name>
+      <Name>SoulsFormats</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
