@@ -11,11 +11,9 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Octokit" Version="12.0.0" />
-    <PackageReference Include="Semver" Version="2.3.0" />
     <PackageReference Include="TeximpNet" Version="1.4.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\SoulsFormats\SoulsFormats\SoulsFormats.csproj" />
+    <ProjectReference Include="..\DSR-TPUP.Core\DSR-TPUP.Core.csproj" />
   </ItemGroup>
 </Project>

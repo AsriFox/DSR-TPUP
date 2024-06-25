@@ -1,13 +1,6 @@
-using Octokit;
-using Semver;
-using System;
-using System.Collections.Generic;
+﻿using DSR_TPUP.Core;
 using System.Diagnostics;
-using System.IO;
 using System.Media;
-using System.Net.Http;
-using System.Threading;
-using System.Windows.Forms;
 using TeximpNet.DDS;
 
 namespace DSR_TPUP
@@ -29,7 +22,9 @@ namespace DSR_TPUP
 
         private async void FormMain_Load(object sender, EventArgs e)
         {
-            Text = "DSR Texture Packer & Unpacker " + System.Windows.Forms.Application.ProductVersion;
+            Text = "DSR Texture Packer & Unpacker " + Application.ProductVersion;
+
+            /// TODO: use Microsoft.Extensions.Configuration package
             Location = settings.WindowLocation;
             Size = settings.WindowSize;
             if (settings.WindowMaximized)
@@ -51,49 +46,31 @@ namespace DSR_TPUP
             enableControls(true);
 
             // Force common formats to the top
-            List<DXGIFormat> outOfOrder = new List<DXGIFormat> {
-                DXGIFormat.BC1_UNorm,
-                DXGIFormat.BC2_UNorm,
-                DXGIFormat.BC3_UNorm,
-                DXGIFormat.BC5_UNorm,
-                DXGIFormat.BC7_UNorm,
-            };
-
-            foreach (DXGIFormat format in outOfOrder)
+            foreach (DXGIFormat format in Main.DXGI_FORMATS_COMMON)
                 cmbConvertFormat.Items.Add(new ConvertFormatItem(format));
-
             cmbConvertFormat.Items.Add("--------------------------------------------------");
-
-            List<DXGIFormat> inOrder = new List<DXGIFormat>();
-            foreach (DXGIFormat format in Enum.GetValues(typeof(DXGIFormat)))
-                if (!outOfOrder.Contains(format) && format != DXGIFormat.Unknown)
-                    inOrder.Add(format);
-
-            inOrder.Sort((f1, f2) => TPUP.PrintDXGIFormat(f1).CompareTo(TPUP.PrintDXGIFormat(f2)));
-            foreach (DXGIFormat format in inOrder)
+            foreach (DXGIFormat format in Main.SortFormatsCustom())
                 cmbConvertFormat.Items.Add(new ConvertFormatItem(format));
             cmbConvertFormat.SelectedIndex = 0;
 
-            GitHubClient gitHubClient = new GitHubClient(new ProductHeaderValue("DSR-TPUP"));
-            try
-            {
-                Release release = await gitHubClient.Repository.Release.GetLatest("JKAnderson", "DSR-TPUP");
-                if (SemVersion.Parse(release.TagName) > System.Windows.Forms.Application.ProductVersion)
-                {
-                    lblUpdate.Visible = false;
-                    LinkLabel.Link link = new LinkLabel.Link();
-                    link.LinkData = UPDATE_LINK;
-                    llbUpdate.Links.Add(link);
-                    llbUpdate.Visible = true;
-                }
-                else
-                {
-                    lblUpdate.Text = "App up to date";
-                }
-            }
-            catch (Exception ex) when (ex is HttpRequestException || ex is ApiException || ex is ArgumentException)
+            var release = await Main.CheckForUpdates(Application.ProductVersion);
+            if (release == null)
             {
                 lblUpdate.Text = "Update status unknown";
+            }
+            else if (release?.Item1 == false)
+            {
+                lblUpdate.Text = "App up to date";
+            }
+            else
+            {
+                lblUpdate.Visible = false;
+                LinkLabel.Link link = new()
+                {
+                    LinkData = release?.Item2 ?? throw new NullReferenceException("Release link must not be null")
+                };
+                llbUpdate.Links.Add(link);
+                llbUpdate.Visible = true;
             }
         }
 
@@ -328,7 +305,7 @@ namespace DSR_TPUP
                     txtError.Clear();
                     pbrProgress.Value = 0;
                     pbrProgress.Maximum = 0;
-                    tpup = new TPUP(gameDir, repackDir, true, cbxPreserveConverted.Checked, (int)nudThreads.Value);
+                    tpup = Main.Repack(gameDir, repackDir, (int)nudThreads.Value, cbxPreserveConverted.Checked);
                     tpupThread = new Thread(tpup.Start);
                     tpupThread.Start();
                 }
@@ -361,56 +338,18 @@ namespace DSR_TPUP
                 SystemSounds.Hand.Play();
         }
 
-        private void btnConvert_Click(object sender, EventArgs e)
+        private async void btnConvert_Click(object sender, EventArgs e)
         {
-            string filepath = txtConvertFile.Text;
-            if (File.Exists(filepath))
+            try
             {
-                if (File.Exists("bin\\texconv.exe"))
-                {
-                    ConvertFormatItem formatItem = cmbConvertFormat.SelectedItem as ConvertFormatItem;
-                    if (formatItem == null)
-                        return;
-                    DXGIFormat format = formatItem.Format;
-
-                    filepath = Path.GetFullPath(filepath);
-                    string directory = Path.GetDirectoryName(filepath);
-
-                    bool backedUp = false;
-                    if (Path.GetExtension(filepath) == ".dds" && !File.Exists(filepath + ".bak"))
-                    {
-                        backedUp = true;
-                        File.Copy(filepath, filepath + ".bak");
-                    }
-
-                    string args = string.Format("-f {0} -o \"{1}\" \"{2}\" -y",
-                        TPUP.PrintDXGIFormat(format), directory, filepath);
-                    ProcessStartInfo startInfo = new ProcessStartInfo("bin\\texconv.exe", args)
-                    {
-                        CreateNoWindow = true,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true
-                    };
-                    Process texconv = Process.Start(startInfo);
-                    texconv.WaitForExit();
-
-                    if (texconv.ExitCode == 0)
-                    {
-                        appendLog("Conversion successful!");
-                        SystemSounds.Asterisk.Play();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Conversion failed.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        if (backedUp)
-                            File.Move(filepath + ".bak", filepath);
-                    }
-                }
-                else
-                    MessageBox.Show("texconv.exe not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (cmbConvertFormat.SelectedItem is not ConvertFormatItem formatItem)
+                    return;
+                await Main.Convert(txtConvertFile.Text, formatItem.Format);
             }
-            else
-                MessageBox.Show("File to be converted does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
         #endregion
 
@@ -422,31 +361,21 @@ namespace DSR_TPUP
             btnAbort.Enabled = false;
         }
 
-        private void btnRestore_Click(object sender, EventArgs e)
+        private async void btnRestore_Click(object sender, EventArgs e)
         {
-            if (!Directory.Exists(txtGameDir.Text))
-            {
-                MessageBox.Show("Game directory not found:\n" + txtGameDir.Text,
-                    "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
+            try
             {
                 txtLog.Clear();
                 txtError.Clear();
-                int found = 0;
-                foreach (string filepath in Directory.GetFiles(txtGameDir.Text, "*.tpupbak", SearchOption.AllDirectories))
-                {
-                    string newPath = Path.GetDirectoryName(filepath) + "\\" + Path.GetFileNameWithoutExtension(filepath);
-                    if (File.Exists(newPath))
-                        File.Delete(newPath);
-                    File.Move(filepath, newPath);
-                    found++;
-                }
-
+                uint found = await Task.Run(() => Main.Restore(txtGameDir.Text));
                 if (found > 0)
                     appendLog(found + " backups restored.");
                 else
                     appendLog("No backups found.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

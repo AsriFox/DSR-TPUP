@@ -7,12 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using TeximpNet.DDS;
 
-namespace DSR_TPUP
+namespace DSR_TPUP.Core
 {
-    class TPUP
+    public class TPUP
     {
         // BNDs without texture files:
         // anibnd, luabnd, menuesdbnd, msgbnd, mtdbnd, parambnd, paramdefbnd, remobnd, rumblebnd
@@ -235,7 +234,7 @@ namespace DSR_TPUP
                 catch (Exception ex)
                 {
                     Stop();
-                    MessageBox.Show("Fatal error encountered. The operation will now terminate.\n\n" + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    throw ex;
                 }
 
                 lock (progressLock)
