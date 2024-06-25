@@ -1,8 +1,6 @@
-﻿using System;
-using System.Windows.Forms;
-
 namespace DSR_TPUP
 {
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     static class Program
     {
         /// <summary>

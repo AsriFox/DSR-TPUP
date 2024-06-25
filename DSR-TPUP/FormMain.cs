@@ -1,4 +1,4 @@
-﻿using Octokit;
+using Octokit;
 using Semver;
 using System;
 using System.Collections.Generic;
@@ -12,13 +12,14 @@ using TeximpNet.DDS;
 
 namespace DSR_TPUP
 {
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
     public partial class FormMain : Form
     {
-        private const string UPDATE_LINK = "https://www.nexusmods.com/darksoulsremastered/mods/9?tab=files";
-        private static Properties.Settings settings = Properties.Settings.Default;
+        private static readonly string explorer = Environment.GetEnvironmentVariable("WINDIR") + @"\explorer.exe";
+        private static readonly Properties.Settings settings = Properties.Settings.Default;
 
-        private TPUP tpup;
-        private Thread tpupThread;
+        private TPUP? tpup;
+        private Thread? tpupThread;
         private bool abort = false;
 
         public FormMain()
@@ -98,13 +99,15 @@ namespace DSR_TPUP
 
         private void llbUpdate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start(e.Link.LinkData.ToString());
+            Process.Start(e.Link?.LinkData?.ToString() ?? throw new NullReferenceException("Update link must not be null"));
         }
 
         private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (tpupThread?.IsAlive ?? false)
             {
+                if (tpup == null)
+                    return;
                 tpup.Stop();
                 e.Cancel = true;
                 abort = true;
@@ -153,7 +156,7 @@ namespace DSR_TPUP
         private void btnGameExplore_Click(object sender, EventArgs e)
         {
             if (Directory.Exists(txtGameDir.Text))
-                Process.Start(Path.GetFullPath(txtGameDir.Text));
+                Process.Start(explorer, Path.GetFullPath(txtGameDir.Text));
             else
                 SystemSounds.Hand.Play();
         }
@@ -178,7 +181,7 @@ namespace DSR_TPUP
         private void btnUnpackExplore_Click(object sender, EventArgs e)
         {
             if (Directory.Exists(txtUnpackDir.Text))
-                Process.Start(Path.GetFullPath(txtUnpackDir.Text));
+                Process.Start(explorer, Path.GetFullPath(txtUnpackDir.Text));
             else
                 SystemSounds.Hand.Play();
         }
@@ -254,7 +257,7 @@ namespace DSR_TPUP
                         txtError.Clear();
                         pbrProgress.Value = 0;
                         pbrProgress.Maximum = 0;
-                        tpup = new TPUP(txtGameDir.Text, unpackDir, false, false, (int)nudThreads.Value);
+                        tpup = Main.Unpack(txtGameDir.Text, unpackDir, (int)nudThreads.Value);
                         tpupThread = new Thread(tpup.Start);
                         tpupThread.Start();
                     }
@@ -282,7 +285,7 @@ namespace DSR_TPUP
         private void btnRepackExplore_Click(object sender, EventArgs e)
         {
             if (Directory.Exists(txtRepackDir.Text))
-                Process.Start(Path.GetFullPath(txtRepackDir.Text));
+                Process.Start(explorer, Path.GetFullPath(txtRepackDir.Text));
             else
                 SystemSounds.Hand.Play();
         }
@@ -349,7 +352,11 @@ namespace DSR_TPUP
         private void btnConvertExplore_Click(object sender, EventArgs e)
         {
             if (File.Exists(txtConvertFile.Text))
-                Process.Start(Path.GetDirectoryName(Path.GetFullPath(txtConvertFile.Text)));
+            {
+                string convertDir = Path.GetDirectoryName(Path.GetFullPath(txtConvertFile.Text)) 
+                    ?? throw new NullReferenceException("Directory to explore must not be null");
+                Process.Start(explorer, convertDir);
+            }
             else
                 SystemSounds.Hand.Play();
         }
@@ -409,6 +416,8 @@ namespace DSR_TPUP
 
         private void btnAbort_Click(object sender, EventArgs e)
         {
+            if (tpup == null)
+                return;
             tpup.Stop();
             btnAbort.Enabled = false;
         }
@@ -443,10 +452,13 @@ namespace DSR_TPUP
 
         private void updateLogs()
         {
-            while (tpup.Log.TryDequeue(out string line))
+            if (tpup == null)
+                return;
+
+            while (tpup.Log.TryDequeue(out string? line))
                 appendLog(line);
 
-            while (tpup.Error.TryDequeue(out string line))
+            while (tpup.Error.TryDequeue(out string? line))
                 appendError(line);
 
             if (pbrProgress.Maximum == 0)
@@ -491,7 +503,7 @@ namespace DSR_TPUP
         private void cmbConvertFormat_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Please don't select the separator
-            if (cmbConvertFormat.SelectedItem as ConvertFormatItem == null)
+            if (cmbConvertFormat.SelectedItem is not ConvertFormatItem)
                 cmbConvertFormat.SelectedIndex--;
         }
 
