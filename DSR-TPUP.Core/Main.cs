@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using TeximpNet.DDS;
 
+[assembly:System.Runtime.CompilerServices.TypeForwardedToAttribute(typeof(DXGIFormat))]
+
 namespace DSR_TPUP.Core
 {
     public static class Main

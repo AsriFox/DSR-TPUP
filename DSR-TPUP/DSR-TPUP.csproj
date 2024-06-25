@@ -11,9 +11,6 @@
     <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="TeximpNet" Version="1.4.3" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\DSR-TPUP.Core\DSR-TPUP.Core.csproj" />
   </ItemGroup>
 </Project>
