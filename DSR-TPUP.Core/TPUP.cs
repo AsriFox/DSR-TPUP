@@ -1,4 +1,4 @@
-﻿using SoulsFormats;
+using SoulsFormats;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -233,8 +233,16 @@ namespace DSR_TPUP.Core
                 }
                 catch (Exception ex)
                 {
-                    Stop();
-                    throw ex;
+                    appendError(relative + ": " + ex.Message);
+                    if (ex is EndOfStreamException)
+                    {
+                        // Skipped
+                    }
+                    else
+                    {
+                        Stop();
+                        throw ex;
+                    }
                 }
 
                 lock (progressLock)
