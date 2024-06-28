@@ -1,4 +1,4 @@
-using SoulsFormats;
+﻿using SoulsFormats;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -606,6 +606,11 @@ namespace DSR_TPUP.Core
                 return dxgiFormatOverride[format];
             else
                 return format.ToString().ToUpper();
+        }
+
+        public void ConsoleCancel(object sender, ConsoleCancelEventArgs args) {
+            args.Cancel = true;
+            Stop();
         }
     }
 }

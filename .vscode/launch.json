@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug CLI: Unpack",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/DSR-TPUP.CLI/bin/Debug/net8.0/DSR-TPUP.CLI.dll",
+            "args": [
+                "unpack",
+                "-g", "C:\\Games\\SteamApps\\common\\DARK SOULS REMASTERED",
+                "-o", "${workspaceFolder}\\DSR-TPUP.CLI\\bin\\Debug\\Texture Dump",
+                "-j", "24",
+                "-y"
+            ],
+            "cwd": "${workspaceFolder}/DSR-TPUP.CLI",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Debug CLI: Repack",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/DSR-TPUP.CLI/bin/Debug/net8.0/DSR-TPUP.CLI.dll",
+            "args": [
+                "repack",
+                "-g", "C:\\Games\\SteamApps\\common\\DARK SOULS REMASTERED",
+                "-o", "C:\\Games\\SteamApps\\common\\DARK SOULS REMASTERED\\DSR Texture Packer & Unpacker 1.5\\override"
+            ],
+            "cwd": "${workspaceFolder}/DSR-TPUP.CLI",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+        // TODO: Convert
+        {
+            "name": "Debug CLI: Restore",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/DSR-TPUP.CLI/bin/Debug/net8.0/DSR-TPUP.CLI.dll",
+            "args": [
+                "restore",
+                "-g", "C:\\Games\\SteamApps\\common\\DARK SOULS REMASTERED"
+            ],
+            "cwd": "${workspaceFolder}/DSR-TPUP.CLI",
+            "console": "integratedTerminal",
+            "stopAtEntry": false
+        },
+    ]
+}
